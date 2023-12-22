@@ -1,0 +1,37 @@
+<div class="login-container">
+  <div nz-row nzAlign="middle" nzJustify="center">
+    <div nz-col nzSpan="12">
+      <h3 nz-typography class="login-title">Login</h3>
+    </div>
+  </div>
+  <div nz-row nzAlign="middle" nzJustify="center">
+    <form nz-col nzSpan="8" nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="submitForm()">
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Please input your Email!">
+          <nz-input-group nzPrefixIcon="user">
+            <input type="email" nz-input formControlName="email" placeholder="Email" />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+      <nz-form-item>
+        <nz-form-control nzErrorTip="Please input your Password!">
+          <nz-input-group nzPrefixIcon="lock">
+            <input type="password" nz-input formControlName="password" placeholder="Password" />
+          </nz-input-group>
+        </nz-form-control>
+      </nz-form-item>
+      <div nz-row class="login-form-margin" nzJustify="end">
+        <div nz-col>
+          <a routerLink="/forgot-password">Forgot password</a>
+        </div>
+      </div>
+      <button nz-button class="login-form-button login-form-margin" [nzType]="'primary'" [disabled]="isLoading()" [nzLoading]="isLoading()">Log in</button>
+      <div nz-row nzJustify="center">
+        <div nz-col>
+          Or
+          <a routerLink="/sign-up">Register now!</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
