@@ -1,0 +1,32 @@
+<div class="register-container">
+    <div nz-row nzAlign="middle" nzJustify="center">
+      <div nz-col nzSpan="12">
+        <h3 nz-typography class="register-title">Register</h3>
+      </div>
+    </div>
+    <div nz-row nzAlign="middle" nzJustify="center">
+      <form nz-col nzSpan="8" nz-form [formGroup]="validateForm" class="register-form" (ngSubmit)="submitForm()">
+        <nz-form-item>
+          <nz-form-control nzErrorTip="Please input your email!">
+            <nz-input-group nzPrefixIcon="user" >
+              <input type="email" nz-input formControlName="email" placeholder="Email" />
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item>
+          <nz-form-control nzErrorTip="Please input your Password!">
+            <nz-input-group nzPrefixIcon="lock" >
+              <input type="password" nz-input formControlName="password" placeholder="Password" />
+            </nz-input-group>
+          </nz-form-control>
+        </nz-form-item>
+        <button nz-button class="register-form-button register-form-margin" [nzType]="'primary'" [nzLoading]="isLoading()" [disabled]="isLoading()">Register</button>
+        <div nz-row nzJustify="center">
+          <div nz-col>
+            Or
+            <a routerLink="/sign-in">login</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
