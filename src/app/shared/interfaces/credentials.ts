@@ -5,7 +5,7 @@ export interface Credentials {
   password: string;
 }
 
-export interface FormValues {
+export interface AuthFormValues {
   email: FormControl<string>;
   password: FormControl<string>;
 }

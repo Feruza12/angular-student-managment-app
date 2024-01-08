@@ -32,7 +32,7 @@ export class AuthService {
     user: null,
   });
 
-  user: Signal<AuthUser> = computed(() => this.state().user);
+  public user: Signal<AuthUser> = computed(() => this.state().user);
 
   constructor() {
     this.user$.pipe(

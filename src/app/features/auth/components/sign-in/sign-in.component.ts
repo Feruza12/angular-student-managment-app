@@ -14,7 +14,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzMessageModule } from 'ng-zorro-antd/message';
 
 import { AuthService } from '../../../../shared/services/auth.service';
-import { FormValues } from '../../../../shared/interfaces/credentials';
+import { AuthFormValues } from '../../../../shared/interfaces/credentials';
 
 
 @Component({
@@ -32,11 +32,11 @@ export class SignInComponent implements OnDestroy {
 
   private loadingState = signal<boolean>(false)
 
-  onDestroy$: Subject<void> = new Subject();
+  private onDestroy$: Subject<void> = new Subject();
 
-  isLoading: Signal<boolean> = computed(() => this.loadingState())
+  public isLoading: Signal<boolean> = computed(() => this.loadingState())
 
-  validateForm:  FormGroup<FormValues> = this.fb.group({
+  validateForm:  FormGroup<AuthFormValues> = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
     password: ['', [Validators.minLength(6), Validators.required]],
   });

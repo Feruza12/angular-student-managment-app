@@ -1,4 +1,4 @@
-import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, Signal, computed, effect, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -27,9 +27,9 @@ export class ForgotPasswordComponent implements OnDestroy {
 
   private loadingState = signal<boolean>(false)
 
-  onDestroy$: Subject<void> = new Subject();
+  private onDestroy$: Subject<void> = new Subject();
 
-  isLoading = computed(() => this.loadingState())
+  public isLoading: Signal<boolean> = computed(() => this.loadingState())
 
   validateForm: FormGroup<{
     email: FormControl<string>;
@@ -81,7 +81,7 @@ export class ForgotPasswordComponent implements OnDestroy {
     });
   }
 
-  ngOnDestroy() : void {
+  ngOnDestroy(): void {
     this.onDestroy$.next();
     this.onDestroy$.complete();
   }

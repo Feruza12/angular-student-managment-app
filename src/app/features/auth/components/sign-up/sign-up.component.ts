@@ -1,4 +1,4 @@
-import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, Signal, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -15,7 +15,7 @@ import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
 
 import { AuthService } from '../../../../shared/services/auth.service';
-import { FormValues } from '../../../../shared/interfaces/credentials';
+import { AuthFormValues } from '../../../../shared/interfaces/credentials';
 
 
 
@@ -35,11 +35,11 @@ export class SignUpComponent implements OnDestroy {
 
   private loadingState = signal<boolean>(false)
 
-  onDestroy$: Subject<void> = new Subject();
+  private onDestroy$: Subject<void> = new Subject();
 
-  isLoading = computed(() => this.loadingState())
+  public isLoading: Signal<boolean> = computed(() => this.loadingState())
 
-  validateForm: FormGroup<FormValues> = this.fb.nonNullable.group({
+  validateForm: FormGroup<AuthFormValues> = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
     password: ['', [Validators.minLength(6), Validators.required]],
   });

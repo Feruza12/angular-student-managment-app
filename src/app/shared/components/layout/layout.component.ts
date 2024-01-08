@@ -22,7 +22,7 @@ export class LayoutComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  userEmail: string = this.authService.user()?.email ?? 'no email found';
+  public userEmail: string = this.authService.user()?.email ?? 'no email found';
 
   constructor() {
     effect(() => {
