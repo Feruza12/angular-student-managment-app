@@ -18,11 +18,11 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
   imports: [RouterOutlet, NzIconModule, NzLayoutModule, NzButtonModule, CommonModule, NzTypographyModule, SidebarComponent],
 })
 export class LayoutComponent {
-  isCollapsed = false;
+  public isCollapsed = false;
   private authService = inject(AuthService);
   private router = inject(Router);
 
-  userEmail = this.authService.user()?.email;
+  userEmail: string = this.authService.user()?.email ?? 'no email found';
 
   constructor() {
     effect(() => {
