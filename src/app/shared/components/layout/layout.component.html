@@ -10,8 +10,8 @@
           <span class="trigger" nz-icon [nzType]="isCollapsed ? 'menu-unfold' : 'menu-fold'"></span>
         </span>
         <div class="right-section">
-          <h5 nz-typography>{{authService.user()?.email}}</h5>
-          <button nz-button nzType="primary" nzSize="default" class="logout-button" (click)="authService.logout()">          
+          <h5 nz-typography>{{userEmail}}</h5>
+          <button nz-button nzType="primary" nzSize="default" class="logout-button" (click)="logout()">          
             Logout
           </button>
         </div>

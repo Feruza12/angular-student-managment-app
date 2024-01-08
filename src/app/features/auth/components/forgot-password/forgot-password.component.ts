@@ -1,32 +1,28 @@
 import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { NzButtonModule } from 'ng-zorro-antd/button';
+import { FormControl, FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+
 import { NzFormModule } from 'ng-zorro-antd/form';
-import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../shared/services/auth.service';
-import { catchError, finalize, takeUntil } from 'rxjs/operators';
-import { EMPTY, Subject } from 'rxjs';
+import { EMPTY, Subject, catchError, finalize, takeUntil, tap } from 'rxjs';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
-import { CommonModule } from '@angular/common';
-
-
 
 @Component({
-  selector: 'app-sign-up',
+  selector: 'app-forgot-password',
   standalone: true,
-  imports: [NzFormModule, NzInputModule, NzButtonModule, FormsModule, ReactiveFormsModule, NzGridModule, NzTypographyModule, NzSpaceModule, RouterModule, NzMessageModule, CommonModule],
-  templateUrl: './sign-up.component.html',
-  styleUrl: './sign-up.component.sass'
+  imports: [NzFormModule, NzInputModule, NzButtonModule, FormsModule, ReactiveFormsModule, NzGridModule, NzTypographyModule, NzSpaceModule, RouterModule, NzMessageModule],
+  templateUrl: './forgot-password.component.html',
+  styleUrl: './forgot-password.component.sass'
 })
-export class SignUpComponent implements OnDestroy {
-
+export class ForgotPasswordComponent implements OnDestroy {
   private router = inject(Router);
-  private authService = inject(AuthService);
-  private fb = inject(FormBuilder);
+  private authService = inject(AuthService)
+  private fb = inject(NonNullableFormBuilder)
   private toast = inject(NzMessageService)
 
   private loadingState = signal<boolean>(false)
@@ -37,24 +33,22 @@ export class SignUpComponent implements OnDestroy {
 
   validateForm: FormGroup<{
     email: FormControl<string>;
-    password: FormControl<string>;
-  }> = this.fb.nonNullable.group({
+  }> = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
-    password: ['', [Validators.minLength(6), Validators.required]],
   });
 
   submitForm(): void {
     if (this.validateForm.valid) {
-      const credentials = { ...this.validateForm.getRawValue() }
-
       this.loadingState.set(true)
 
-      this.authService.signUp(credentials).pipe(
+      const email = this.validateForm.getRawValue().email
+      this.authService.resetPassword(email).pipe(
         takeUntil(this.onDestroy$),
         catchError((error) => {
           this.toast.error(error.message, {
             nzDuration: 5000
           })
+
           console.error('An error occurred:', error);
 
           return EMPTY;
@@ -62,10 +56,13 @@ export class SignUpComponent implements OnDestroy {
         }),
         finalize(() => {
           this.loadingState.set(false)
-        }))
-        .subscribe()
-
-
+        }),
+        tap({
+          next: (() => {
+            this.router.navigate(['/sign-in']);
+          })
+        })
+      ).subscribe()
     } else {
       Object.values(this.validateForm.controls).forEach(control => {
         if (control.invalid) {
@@ -79,14 +76,13 @@ export class SignUpComponent implements OnDestroy {
   constructor() {
     effect(() => {
       if (this.authService.user()) {
-        this.router.navigate(['/'])
+        this.router.navigate(['/']);
       }
-    })
+    });
   }
 
-  ngOnDestroy() {
+  ngOnDestroy() : void {
     this.onDestroy$.next();
     this.onDestroy$.complete();
   }
-
 }

@@ -1,28 +1,36 @@
 import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NzFormModule } from 'ng-zorro-antd/form';
-import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzGridModule } from 'ng-zorro-antd/grid';
-import { NzTypographyModule } from 'ng-zorro-antd/typography';
-import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
+
+import { catchError, finalize, takeUntil } from 'rxjs/operators';
+import { EMPTY, Subject } from 'rxjs';
+
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzGridModule } from 'ng-zorro-antd/grid';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSpaceModule } from 'ng-zorro-antd/space';
+import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
+
 import { AuthService } from '../../../../shared/services/auth.service';
-import { EMPTY, Subject, catchError, finalize, takeUntil } from 'rxjs';
-import { NzMessageService } from 'ng-zorro-antd/message';
-import { NzMessageModule } from 'ng-zorro-antd/message';
+import { FormValues } from '../../../../shared/interfaces/credentials';
+
+
 
 @Component({
-  selector: 'app-sign-in',
+  selector: 'app-sign-up',
   standalone: true,
-  imports: [NzFormModule, NzInputModule, NzButtonModule, FormsModule, ReactiveFormsModule, NzGridModule, NzTypographyModule, NzSpaceModule, RouterModule, NzMessageModule],
-  templateUrl: './sign-in.component.html',
-  styleUrl: './sign-in.component.sass'
+  imports: [NzFormModule, NzInputModule, NzButtonModule, FormsModule, ReactiveFormsModule, NzGridModule, NzTypographyModule, NzSpaceModule, RouterModule, NzMessageModule, CommonModule],
+  templateUrl: './sign-up.component.html',
+  styleUrl: './sign-up.component.sass'
 })
-export class SignInComponent implements OnDestroy {
+export class SignUpComponent implements OnDestroy {
+
   private router = inject(Router);
-  private authService = inject(AuthService)
-  private fb = inject(NonNullableFormBuilder)
+  private authService = inject(AuthService);
+  private fb = inject(FormBuilder);
   private toast = inject(NzMessageService)
 
   private loadingState = signal<boolean>(false)
@@ -31,10 +39,7 @@ export class SignInComponent implements OnDestroy {
 
   isLoading = computed(() => this.loadingState())
 
-  validateForm: FormGroup<{
-    email: FormControl<string>;
-    password: FormControl<string>;
-  }> = this.fb.group({
+  validateForm: FormGroup<FormValues> = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
     password: ['', [Validators.minLength(6), Validators.required]],
   });
@@ -45,7 +50,7 @@ export class SignInComponent implements OnDestroy {
 
       this.loadingState.set(true)
 
-      this.authService.login(credentials).pipe(
+      this.authService.signUp(credentials).pipe(
         takeUntil(this.onDestroy$),
         catchError((error) => {
           this.toast.error(error.message, {
@@ -60,6 +65,8 @@ export class SignInComponent implements OnDestroy {
           this.loadingState.set(false)
         }))
         .subscribe()
+
+
     } else {
       Object.values(this.validateForm.controls).forEach(control => {
         if (control.invalid) {
@@ -73,13 +80,14 @@ export class SignInComponent implements OnDestroy {
   constructor() {
     effect(() => {
       if (this.authService.user()) {
-        this.router.navigate(['/']);
+        this.router.navigate(['/'])
       }
-    });
+    })
   }
 
   ngOnDestroy() {
     this.onDestroy$.next();
     this.onDestroy$.complete();
   }
+
 }

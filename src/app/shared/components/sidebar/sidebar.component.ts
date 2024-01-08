@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
@@ -12,9 +13,9 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
   styleUrl: './sidebar.component.sass'
 })
 export class SidebarComponent {
-  @Input() isCollapsed = false;
+  @Input() isCollapsed: boolean = false;
 
-  onMenuItemSelect(event: any) {
+  onMenuItemSelect(event: any): void {
     console.log(event)
   }
 }

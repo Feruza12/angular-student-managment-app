@@ -1,9 +1,12 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { AUTH } from '../../app.config';
 
 import { authState } from 'rxfire/auth';
+import { from, defer, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
 import { Credentials } from '../interfaces/credentials';
+
 import {
   User,
   createUserWithEmailAndPassword,
@@ -11,9 +14,8 @@ import {
   signOut,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { from, defer } from 'rxjs';
 
-export type AuthUser = User | null ;
+export type AuthUser = User | null;
 
 interface AuthState {
   user: AuthUser;
@@ -30,15 +32,18 @@ export class AuthService {
     user: null,
   });
 
-  user = computed(() => this.state().user);
+  user: Signal<AuthUser> = computed(() => this.state().user);
 
   constructor() {
-    this.user$.pipe(takeUntilDestroyed()).subscribe((user) =>
-      this.state.update((state) => ({
-        ...state,
-        user,
-      }))
-    );
+    this.user$.pipe(
+      takeUntilDestroyed(),
+      tap((user: User | null) => {
+        this.state.update((state) => ({
+          ...state,
+          user,
+        }))
+      })
+    ).subscribe();
   }
 
   login(credentials: Credentials) {
@@ -60,9 +65,9 @@ export class AuthService {
       ))
     )
   }
-  resetPassword(email: string){
+  resetPassword(email: string) {
     return from(
-      defer(()=> sendPasswordResetEmail(
+      defer(() => sendPasswordResetEmail(
         this.auth,
         email
       ))

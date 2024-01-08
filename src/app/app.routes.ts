@@ -1,9 +1,9 @@
 import { Routes } from '@angular/router';
-import { PageNotFoundComponent } from './components/page-not-found/page-not-found.component';
+import { PageNotFoundComponent } from './shared/components/page-not-found/page-not-found.component';
 import { isAuthenticatedGuard } from './shared/guards/auth.guard';
-import { SignInComponent } from './features/auth/pages/sign-in/sign-in.component';
-import { SignUpComponent } from './features/auth/pages/sign-up/sign-up.component';
-import { ForgotPasswordComponent } from './features/auth/pages/forgot-password/forgot-password.component';
+import { SignInComponent } from './features/auth/components/sign-in/sign-in.component';
+import { SignUpComponent } from './features/auth/components/sign-up/sign-up.component';
+import { ForgotPasswordComponent } from './features/auth/components/forgot-password/forgot-password.component';
 import { LayoutComponent } from './shared/components/layout/layout.component';
 
 export const routes: Routes = [

@@ -1,5 +1,8 @@
-import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnDestroy, Signal, computed, effect, inject, signal } from '@angular/core';
+import { FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+
+import { EMPTY, Subject, catchError, finalize, takeUntil } from 'rxjs';
 
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -7,19 +10,21 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzSpaceModule } from 'ng-zorro-antd/space';
-import { Router, RouterModule } from '@angular/router';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzMessageModule } from 'ng-zorro-antd/message';
+
 import { AuthService } from '../../../../shared/services/auth.service';
-import { EMPTY, Subject, catchError, finalize, takeUntil } from 'rxjs';
-import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
+import { FormValues } from '../../../../shared/interfaces/credentials';
+
 
 @Component({
-  selector: 'app-forgot-password',
+  selector: 'app-sign-in',
   standalone: true,
   imports: [NzFormModule, NzInputModule, NzButtonModule, FormsModule, ReactiveFormsModule, NzGridModule, NzTypographyModule, NzSpaceModule, RouterModule, NzMessageModule],
-  templateUrl: './forgot-password.component.html',
-  styleUrl: './forgot-password.component.sass'
+  templateUrl: './sign-in.component.html',
+  styleUrl: './sign-in.component.sass'
 })
-export class ForgotPasswordComponent implements OnDestroy {
+export class SignInComponent implements OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService)
   private fb = inject(NonNullableFormBuilder)
@@ -29,26 +34,25 @@ export class ForgotPasswordComponent implements OnDestroy {
 
   onDestroy$: Subject<void> = new Subject();
 
-  isLoading = computed(() => this.loadingState())
+  isLoading: Signal<boolean> = computed(() => this.loadingState())
 
-  validateForm: FormGroup<{
-    email: FormControl<string>;
-  }> = this.fb.group({
+  validateForm:  FormGroup<FormValues> = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
+    password: ['', [Validators.minLength(6), Validators.required]],
   });
 
   submitForm(): void {
     if (this.validateForm.valid) {
+      const credentials = { ...this.validateForm.getRawValue() }
+
       this.loadingState.set(true)
 
-      const email = this.validateForm.getRawValue().email
-      this.authService.resetPassword(email).pipe(
+      this.authService.login(credentials).pipe(
         takeUntil(this.onDestroy$),
         catchError((error) => {
           this.toast.error(error.message, {
             nzDuration: 5000
           })
-
           console.error('An error occurred:', error);
 
           return EMPTY;
@@ -56,12 +60,8 @@ export class ForgotPasswordComponent implements OnDestroy {
         }),
         finalize(() => {
           this.loadingState.set(false)
-        })
-      ).subscribe({
-        next: ((res) => {
-          this.router.navigate(['/sign-in']);
-        })
-      })
+        }))
+        .subscribe()
     } else {
       Object.values(this.validateForm.controls).forEach(control => {
         if (control.invalid) {
