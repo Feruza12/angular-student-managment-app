@@ -21,7 +21,7 @@ import {
   getFirestore,
 } from 'firebase/firestore';
 
-const app = initializeApp(environment.firebase);
+initializeApp(environment.firebase);
 
 export const AUTH = new InjectionToken('Firebase auth', {
   providedIn: 'root',

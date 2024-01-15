@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Signal, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -20,24 +20,24 @@ import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
   styleUrl: './forgot-password.component.sass'
 })
 export class ForgotPasswordComponent implements OnDestroy {
-  private router = inject(Router);
-  private authService = inject(AuthService)
-  private fb = inject(NonNullableFormBuilder)
-  private toast = inject(NzMessageService)
+  private router: Router = inject(Router);
+  private authService: AuthService = inject(AuthService)
+  private fb: NonNullableFormBuilder = inject(NonNullableFormBuilder)
+  private toast: NzMessageService = inject(NzMessageService)
 
-  private loadingState = signal<boolean>(false)
+  private loadingState: WritableSignal<boolean> = signal<boolean>(false)
 
   private onDestroy$: Subject<void> = new Subject();
 
   public isLoading: Signal<boolean> = computed(() => this.loadingState())
 
-  validateForm: FormGroup<{
+  public validateForm: FormGroup<{
     email: FormControl<string>;
   }> = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
   });
 
-  submitForm(): void {
+  public submitForm(): void {
     if (this.validateForm.valid) {
       this.loadingState.set(true)
 
@@ -54,13 +54,11 @@ export class ForgotPasswordComponent implements OnDestroy {
           return EMPTY;
 
         }),
+        tap(() => {
+          this.router.navigate(['/sign-in']);
+        }),
         finalize(() => {
           this.loadingState.set(false)
-        }),
-        tap({
-          next: (() => {
-            this.router.navigate(['/sign-in']);
-          })
         })
       ).subscribe()
     } else {
@@ -81,7 +79,7 @@ export class ForgotPasswordComponent implements OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
+  public ngOnDestroy(): void {
     this.onDestroy$.next();
     this.onDestroy$.complete();
   }

@@ -15,7 +15,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 export class SidebarComponent {
   @Input() public isCollapsed: boolean = false;
 
-  onMenuItemSelect(event: any): void {
+  public onMenuItemSelect(event: any): void {
     console.log(event)
   }
 }
