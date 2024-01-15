@@ -16,6 +16,6 @@ export class SidebarComponent {
   @Input() public isCollapsed: boolean = false;
 
   onMenuItemSelect(event: any): void {
-    console.log(event)
+    // console.log(event)
   }
 }

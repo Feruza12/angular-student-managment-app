@@ -1,1 +1,47 @@
-<p>students works!</p>
+<app-header title="Students"></app-header>
+@if (loading()) {
+<p>Loading ...</p>
+} @else {
+<button nz-button (click)="addStudent()" nzType="primary" class="add-btn">Add Student</button>
+@if (students().length !=0) {
+<nz-table #editRowTable nzBordered [nzData]="students()" nzTableLayout="fixed">
+    <thead>
+        <tr>
+            <th>FirstName</th>
+            <th>LastName</th>
+            <th>Group</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (student of students(); track student.createdAt) {
+        <tr>
+            <ng-container *ngIf="!editCache[student.id]?.edit; else editTemplate">
+                <td>{{student.firstName}}</td>
+                <td>{{student.lastName}}</td>
+                <td>{{student.group}}</td>
+                <td>
+                    <a (click)="editStudent(student.id)">Edit</a>
+                    <nz-divider nzType="vertical"></nz-divider>
+                    <a nz-popconfirm nzPopconfirmTitle="Sure to delete?"
+                        (nzOnConfirm)="deleteStudent(student.id)">Delete</a>
+                </td>
+            </ng-container>
+             <ng-template #editTemplate>
+                <td><input type="text" nz-input [(ngModel)]="editCache[student.id].student.firstName" /></td>
+                <td><input type="text" nz-input [(ngModel)]="editCache[student.id].student.lastName" /></td>
+                <td><input type="text" nz-input [(ngModel)]="editCache[student.id].student.group" /></td>
+                <td>
+                    <a (click)="saveEdit(student.id)" class="save">Save</a>
+                    <a nz-popconfirm nzPopconfirmTitle="Sure to cancel?"
+                        (nzOnConfirm)="cancelEdit(student.id)">Cancel</a>
+                </td>
+            </ng-template> 
+        </tr>
+        }
+    </tbody>
+</nz-table>
+} @else {
+<h4 nz-typography>Students list is empty!</h4>
+}
+}

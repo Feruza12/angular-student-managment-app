@@ -3,10 +3,10 @@ import { StudentsComponent } from '../../../features/students/students.component
 import { HomeComponent } from '../../../features/home/home.component';
 
 export const LAYOUT_ROUTES: Routes = [
-  { path: 'home', component: HomeComponent },
-  { path: 'students', component: StudentsComponent },
-  { path: 'groups', component: StudentsComponent },
-  { path: 'profile', component: StudentsComponent },
+  { path: 'home', component: HomeComponent , title: 'Home' },
+  { path: 'students', component: StudentsComponent, title: 'Students' },
+  { path: 'groups', component: StudentsComponent , title: 'Groups' },
+  { path: 'profile', component: StudentsComponent , title: 'Profile' },
   {
     path: '',
     redirectTo: 'home',
