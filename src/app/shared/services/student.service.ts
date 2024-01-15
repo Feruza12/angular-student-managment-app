@@ -1,12 +1,15 @@
-import { Injectable, Signal, computed, inject, signal } from '@angular/core';
-import { FIRESTORE } from '../../app.config';
-import { AuthService } from './auth.service';
-import { collection, orderBy, query } from 'firebase/firestore';
-import { collectionData } from 'rxfire/firestore';
-import { map, tap, finalize } from 'rxjs/operators';
+import { Injectable, Signal, WritableSignal, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Student } from '../interfaces/students';
-import { Observable } from 'rxjs';
+
+import { Observable, Subject, defer } from 'rxjs';
+import { map, tap, finalize, exhaustMap } from 'rxjs/operators';
+
+import { Firestore, collection, orderBy, query, addDoc, updateDoc, serverTimestamp, deleteDoc, doc, DocumentReference, DocumentData } from 'firebase/firestore';
+import { collectionData } from 'rxfire/firestore';
+
+
+import { FIRESTORE } from '../../app.config';
+import { Student, StudentFormValue } from '../interfaces/students';
 
 interface StudentState {
   students: Student[];
@@ -14,16 +17,17 @@ interface StudentState {
   loading: boolean;
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
 export class StudentService {
-  private fireStore = inject(FIRESTORE);
+  private fireStore: Firestore = inject(FIRESTORE);
 
-  public students$ = this.getStudents().pipe()
+  private students$: Observable<Student[]> = this.getStudents();
+  public addStudent$ = new Subject<Partial<Student>>();
+  public deleteStudent$ = new Subject<string>();
 
-  private state = signal<StudentState>({
+  private state: WritableSignal<StudentState> = signal<StudentState>({
     students: [],
     error: null,
     loading: false
@@ -31,6 +35,7 @@ export class StudentService {
 
   public students: Signal<Student[]> = computed(() => this.state().students);
   public loading: Signal<boolean> = computed(() => this.state().loading);
+  public error: Signal<string | null> = computed(() => this.state().error);
 
 
   constructor() {
@@ -41,22 +46,72 @@ export class StudentService {
 
     this.students$.pipe(
       takeUntilDestroyed(),
-      tap((students: Student[]) => this.state.update((state) => ({
-        ...state,
-        students,
-        loading: false
-      }),
+      tap((students: Student[]) => {
+        return this.state.update((state) => ({
+          ...state,
+          students,
+          loading: false
+        }))
+      },
       ))
+      .subscribe();
+
+    this.addStudent$.pipe(
+      takeUntilDestroyed(),
+      exhaustMap((student) => this.addStudent(student)),
+      tap({
+        error: (err: Error) => this.state.update((state) => ({
+          ...state,
+          error: err.message
+        }))
+      })
+    ).subscribe();
+
+    this.deleteStudent$.pipe(
+      takeUntilDestroyed(),
+      exhaustMap((id) => this.deleteStudent(id)),
+      tap({
+        error: (err: Error) => this.state.update((state) => ({
+          ...state,
+          error: err.message
+        }))
+      })
     ).subscribe();
   }
 
-
-  private getStudents() {
+  private getStudents(): Observable<Student[]> {
     const studentsCollection = query(
       collection(this.fireStore, 'students'),
       orderBy('createdAt', 'desc')
     )
 
-    return collectionData(studentsCollection) as Observable<Student[]>
+    return collectionData(studentsCollection, { idField: 'id' }) as Observable<Student[]>
+  }
+
+  private addStudent(student: Partial<Student>): Observable<DocumentReference<DocumentData, DocumentData>> {
+    const newStudent = {
+      firstName: student.firstName,
+      lastName: student.lastName,
+      group: student.group,
+      createdAt: serverTimestamp()
+    }
+
+    return defer(() => addDoc(collection(this.fireStore, 'students'), newStudent))
+  }
+
+  private updateStudent(student: Partial<Student>) {
+    const newStudent = {
+      firstName: student.firstName,
+      lastName: student.lastName,
+      group: student.group,
+    }
+
+    const decRef = doc(this.fireStore, 'students', student.id as string)
+    return defer(() => updateDoc(decRef, newStudent))
+  }
+
+  private deleteStudent(id: string): Observable<void> {
+    const decRef = doc(this.fireStore, 'students', id)
+    return defer(() => deleteDoc(decRef))
   }
 }

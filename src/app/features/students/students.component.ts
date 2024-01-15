@@ -12,57 +12,35 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { StudentService } from '../../shared/services/student.service';
 import { Student } from '../../shared/interfaces/students';
 import { HeaderComponent } from '../../shared/components/header/header.component';
+import { AddStudentModalComponent } from './components/add-student-modal/add-student-modal.component';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, NzTypographyModule, NzTableModule, NzDividerModule, NzButtonModule, NzInputModule, FormsModule, CommonModule, NzPopconfirmModule ],
+  imports: [CommonModule, HeaderComponent, NzTypographyModule, NzTableModule, NzDividerModule, NzButtonModule, NzInputModule, FormsModule, CommonModule, NzPopconfirmModule, AddStudentModalComponent],
   templateUrl: './students.component.html',
   styleUrl: './students.component.sass'
 })
 export class StudentsComponent {
-  private studentsService = inject(StudentService)
+  private studentsService: StudentService = inject(StudentService)
 
   public students: Signal<Student[]> = computed(() => this.studentsService.students())
   public loading: Signal<boolean> = computed(() => this.studentsService.loading())
   public editCache: { [key: string]: { edit: boolean; student: Student } } = {};
 
+  public isShowAddStudentModal: boolean = false;
+  public isAddLoading: boolean = false;
+
   constructor() {
 
   }
 
-  addStudent() {
-
+  public showAddStudentModal(): void {
+    this.isShowAddStudentModal = true;
   }
 
-  deleteStudent(id: string){
-
+  deleteStudent(id: string) {
+    this.studentsService.deleteStudent$.next(id);
   }
 
-  editStudent(id: string): void {
-    // this.editCache[id].edit = true;
-  }
-
-  cancelEdit(id: string): void {
-    const index = this.students().findIndex(item => item.id === id);
-    this.editCache[id] = {
-      student: { ...this.students()[index] },
-      edit: false
-    };
-  }
-
-  saveEdit(id: string): void {
-    const index = this.students().findIndex(item => item.id === id);
-    Object.assign(this.students()[index], this.editCache[id].student);
-    this.editCache[id].edit = false;
-  }
-
-  updateEditCache(): void {
-    this.students().forEach(item => {
-      this.editCache[item.id] = {
-        edit: false,
-        student: { ...item }
-      };
-    });
-  }
 }

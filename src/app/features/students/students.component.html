@@ -2,9 +2,9 @@
 @if (loading()) {
 <p>Loading ...</p>
 } @else {
-<button nz-button (click)="addStudent()" nzType="primary" class="add-btn">Add Student</button>
+<button nz-button (click)="showAddStudentModal()" nzType="primary" class="add-btn">Add Student</button>
 @if (students().length !=0) {
-<nz-table #editRowTable nzBordered [nzData]="students()" nzTableLayout="fixed">
+<nz-table #basicTable nzBordered [nzData]="students()" nzTableLayout="fixed">
     <thead>
         <tr>
             <th>FirstName</th>
@@ -16,27 +16,15 @@
     <tbody>
         @for (student of students(); track student.createdAt) {
         <tr>
-            <ng-container *ngIf="!editCache[student.id]?.edit; else editTemplate">
-                <td>{{student.firstName}}</td>
-                <td>{{student.lastName}}</td>
-                <td>{{student.group}}</td>
-                <td>
-                    <a (click)="editStudent(student.id)">Edit</a>
-                    <nz-divider nzType="vertical"></nz-divider>
-                    <a nz-popconfirm nzPopconfirmTitle="Sure to delete?"
-                        (nzOnConfirm)="deleteStudent(student.id)">Delete</a>
-                </td>
-            </ng-container>
-             <ng-template #editTemplate>
-                <td><input type="text" nz-input [(ngModel)]="editCache[student.id].student.firstName" /></td>
-                <td><input type="text" nz-input [(ngModel)]="editCache[student.id].student.lastName" /></td>
-                <td><input type="text" nz-input [(ngModel)]="editCache[student.id].student.group" /></td>
-                <td>
-                    <a (click)="saveEdit(student.id)" class="save">Save</a>
-                    <a nz-popconfirm nzPopconfirmTitle="Sure to cancel?"
-                        (nzOnConfirm)="cancelEdit(student.id)">Cancel</a>
-                </td>
-            </ng-template> 
+            <td>{{student.firstName}}</td>
+            <td>{{student.lastName}}</td>
+            <td>{{student.group}}</td>
+            <td>
+                <a>Edit</a>
+                <nz-divider nzType="vertical"></nz-divider>
+                <a nz-popconfirm nzPopconfirmTitle="Sure to delete?"
+                    (nzOnConfirm)="deleteStudent(student.id)">Delete</a>
+            </td>
         </tr>
         }
     </tbody>
@@ -45,3 +33,5 @@
 <h4 nz-typography>Students list is empty!</h4>
 }
 }
+
+<app-add-student-modal [isVisible]="isShowAddStudentModal" (visibleChanged)="isShowAddStudentModal = $event" />
