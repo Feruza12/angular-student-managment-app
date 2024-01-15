@@ -1,8 +1,8 @@
-import { Injectable, Signal, computed, inject, signal } from '@angular/core';
+import { Injectable, InjectionToken, Signal, computed, inject, signal } from '@angular/core';
 import { AUTH } from '../../app.config';
 
 import { authState } from 'rxfire/auth';
-import { from, defer, tap } from 'rxjs';
+import { from, defer, tap, Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { Credentials } from '../interfaces/credentials';
@@ -12,7 +12,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  Auth,
+  UserCredential
 } from 'firebase/auth';
 
 export type AuthUser = User | null;
@@ -25,7 +27,7 @@ interface AuthState {
   providedIn: 'root'
 })
 export class AuthService {
-  private auth = inject(AUTH);
+  private auth: Auth = inject(AUTH);
 
   private user$ = authState(this.auth); //user observable
   private state = signal<AuthState>({
@@ -46,7 +48,7 @@ export class AuthService {
     ).subscribe();
   }
 
-  login(credentials: Credentials) {
+  public login(credentials: Credentials): Observable<UserCredential> {
     return from(
       defer(() => signInWithEmailAndPassword(
         this.auth,
@@ -56,7 +58,7 @@ export class AuthService {
     )
   }
 
-  signUp(credentials: Credentials) {
+  public signUp(credentials: Credentials): Observable<UserCredential> {
     return from(
       defer(() => createUserWithEmailAndPassword(
         this.auth,
@@ -65,7 +67,7 @@ export class AuthService {
       ))
     )
   }
-  resetPassword(email: string) {
+  public resetPassword(email: string): Observable<void> {
     return from(
       defer(() => sendPasswordResetEmail(
         this.auth,
@@ -73,7 +75,7 @@ export class AuthService {
       ))
     )
   }
-  logout() {
+  public logout(): void {
     signOut(this.auth);
   }
 }

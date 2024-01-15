@@ -18,10 +18,10 @@ import { Title } from '@angular/platform-browser';
   styleUrls: ['./layout.component.sass'],
   imports: [RouterOutlet, NzIconModule, NzLayoutModule, NzButtonModule, CommonModule, NzTypographyModule, SidebarComponent]
 })
-export class LayoutComponent implements OnInit {
-  public isCollapsed = false;
-  private authService = inject(AuthService);
-  private router = inject(Router);
+export class LayoutComponent {
+  public isCollapsed: boolean = false;
+  private authService: AuthService = inject(AuthService);
+  private router: Router = inject(Router);
 
   public userEmail: string = this.authService.user()?.email ?? 'no email found';
 
@@ -33,10 +33,7 @@ export class LayoutComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
-  }
-
-  logout(): void {
+  public logout(): void {
     this.authService.logout();
   }
 

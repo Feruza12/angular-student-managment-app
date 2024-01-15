@@ -1,4 +1,4 @@
-import { Component, OnDestroy, Signal, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -28,23 +28,23 @@ import { AuthFormValues } from '../../../../shared/interfaces/credentials';
 })
 export class SignUpComponent implements OnDestroy {
 
-  private router = inject(Router);
-  private authService = inject(AuthService);
-  private fb = inject(FormBuilder);
-  private toast = inject(NzMessageService)
+  private router: Router = inject(Router);
+  private authService: AuthService = inject(AuthService);
+  private fb: FormBuilder = inject(FormBuilder);
+  private toast: NzMessageService = inject(NzMessageService)
 
-  private loadingState = signal<boolean>(false)
+  private loadingState: WritableSignal<boolean> = signal<boolean>(false)
 
   private onDestroy$: Subject<void> = new Subject();
 
   public isLoading: Signal<boolean> = computed(() => this.loadingState())
 
-  validateForm: FormGroup<AuthFormValues> = this.fb.nonNullable.group({
+  public validateForm: FormGroup<AuthFormValues> = this.fb.nonNullable.group({
     email: ['', [Validators.email, Validators.required]],
     password: ['', [Validators.minLength(6), Validators.required]],
   });
 
-  submitForm(): void {
+  public submitForm(): void {
     if (this.validateForm.valid) {
       const credentials = { ...this.validateForm.getRawValue() }
 
@@ -85,7 +85,7 @@ export class SignUpComponent implements OnDestroy {
     })
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     this.onDestroy$.next();
     this.onDestroy$.complete();
   }
