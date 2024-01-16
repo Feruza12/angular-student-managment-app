@@ -1,23 +1,22 @@
-import { Component, EventEmitter, Input, Output, Signal, computed, effect, inject } from '@angular/core';
-import { FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, OnInit, Output, Signal, computed, effect, inject } from '@angular/core';
+import { ReactiveFormsModule, FormsModule, NonNullableFormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
-
-import { StudentFormValue } from '../../../../shared/interfaces/students';
 import { StudentService } from '../../../../shared/services/student.service';
+import { Student, StudentFormValue } from '../../../../shared/interfaces/students';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
-  selector: 'app-add-student-modal',
+  selector: 'app-edit-student-modal',
   standalone: true,
   imports: [NzModalModule, NzFormModule, NzInputModule, ReactiveFormsModule, FormsModule, CommonModule, NzMessageModule],
-  templateUrl: './add-student-modal.component.html',
-  styleUrl: './add-student-modal.component.sass'
+  templateUrl: './edit-student-modal.component.html',
+  styleUrl: './edit-student-modal.component.sass'
 })
-export class AddStudentModalComponent {
+export class EditStudentModalComponent {
   @Input() public isVisible: boolean = false;
   @Output() public visibleChanged = new EventEmitter<boolean>();
 
@@ -25,10 +24,10 @@ export class AddStudentModalComponent {
   private studentService: StudentService = inject(StudentService);
   private toast: NzMessageService = inject(NzMessageService)
 
+  private student: Signal<Student | null> = computed(() => this.studentService.selectedStudent());
   private error: Signal<string | null> = computed(() => this.studentService.error())
 
-
-  public isAddLoading: boolean = false;
+  public isUpdateLoading: boolean = false;
 
   public validateForm: FormGroup<StudentFormValue> = this.fb.group({
     firstName: ['', [Validators.minLength(1), Validators.required]],
@@ -36,9 +35,11 @@ export class AddStudentModalComponent {
     group: [0, [Validators.min(0), Validators.required]]
   });
 
-
   constructor() {
     effect(() => {
+      if (this.student()) {
+        this.validateForm.patchValue({ ...this.student() })
+      }
       if (this.error()) {
         this.toast.error(this.error() || '', {
           nzDuration: 5000
@@ -47,18 +48,17 @@ export class AddStudentModalComponent {
     })
   }
 
-  public handleAdd(): void {
-    this.isAddLoading = true;
+  public handleEdit(): void {
+    this.isUpdateLoading = true;
 
     if (this.validateForm.valid) {
-      const student = { ...this.validateForm.getRawValue() }
-
-      this.studentService.addStudent$.next(student);
+      const student = { ...this.validateForm.getRawValue(), id: this.student()?.id}
+      this.studentService.updateStudent$.next(student);
 
       this.isVisible = false;
       this.visibleChanged.emit(this.isVisible)
-      this.isAddLoading = false;
       this.validateForm.reset();
+      this.isUpdateLoading = false;
     } else {
       Object.values(this.validateForm.controls).forEach(control => {
         if (control.invalid) {

@@ -1,0 +1,31 @@
+<nz-modal [(nzVisible)]="isVisible" nzTitle="Edit a student" (nzOnCancel)="handleCancel()" (nzOnOk)="handleEdit()"
+    [nzOkLoading]="isUpdateLoading" [nzOkDisabled]="isUpdateLoading" [nzContent]="modalContent">
+    <ng-template #modalContent>
+        <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="handleEdit()">
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input firstName">
+                    <nz-form-label nzRequired nzFor="firstName">FirstName</nz-form-label>
+                    <nz-input-group>
+                        <input nz-input formControlName="firstName" placeholder="FirstName" />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input lastName">
+                    <nz-form-label nzRequired nzFor="lastName">LastName</nz-form-label>
+                    <nz-input-group>
+                        <input nz-input formControlName="lastName" placeholder="LastName" />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input group">
+                    <nz-form-label nzRequired nzFor="group">Group</nz-form-label>
+                    <nz-input-group>
+                        <input type="number" nz-input formControlName="group" placeholder="Group" />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+        </form>
+    </ng-template>
+</nz-modal>
