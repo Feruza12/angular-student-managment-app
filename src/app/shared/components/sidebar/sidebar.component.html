@@ -1,0 +1,34 @@
+<div class="sidebar-logo">
+    <a href="https://ng.ant.design/" target="_blank">
+        <img src="https://ng.ant.design/assets/img/logo.svg" alt="logo">
+        <h1>Student Management</h1>
+    </a>
+</div>
+<ul nz-menu nzTheme="dark" nzMode="inline" [nzInlineCollapsed]="isCollapsed"
+    (nzClick)="onMenuItemSelect($event.clickMenuItem)">
+    <li nz-menu-item nzMatchRouter>
+        <a [routerLink]='["/home"]' routerLinkActive="active" ariaCurrentWhenActive="page">
+            <span nz-icon nzType="dashboard"></span>
+            <span>Home</span>
+        </a>
+    </li>
+    <li nz-menu-item nzMatchRouter>
+        <a [routerLink]='["students"]' routerLinkActive="active" ariaCurrentWhenActive="page">
+            <span nz-icon nzType="user"></span>
+            <span>Students</span>
+        </a>
+    </li>
+    <li nz-menu-item nzMatchRouter>
+        <a [routerLink]='["groups"]' routerLinkActive="active" ariaCurrentWhenActive="page">
+            <span nz-icon nzType="usergroup-add"></span>
+            <span>Groups</span>
+        </a>
+    </li>
+    <li nz-menu-item nzMatchRouter>
+        <a [routerLink]='["profile"]' routerLinkActive="active" ariaCurrentWhenActive="page">
+            <span nz-icon nzType="profile"> </span>
+            <span>Profile</span>
+        </a>
+    </li>
+
+</ul>
