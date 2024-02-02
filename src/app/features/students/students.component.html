@@ -2,7 +2,8 @@
 @if (loading()) {
 <p>Loading ...</p>
 } @else {
-<button nz-button (click)="showAddStudentModal()" nzType="primary" class="add-btn">Add Student</button>
+<button nz-button (click)="showStudentModal({action: 'add', student: null})" nzType="primary" class="add-btn">Add
+    Student</button>
 @if (students().length !=0) {
 <nz-table #basicTable nzBordered [nzData]="students()" [nzFrontPagination]="false">
     <thead>
@@ -20,19 +21,17 @@
             <td>{{student.lastName}}</td>
             <td>{{student.group}}</td>
             <td>
-                <a (click)="showUpdateStudentModal(student)">Edit</a>
+                <a (click)="showStudentModal({action: 'edit', student})">Edit</a>
                 <nz-divider nzType="vertical"></nz-divider>
                 <a nz-popconfirm nzPopconfirmTitle="Sure to delete?"
                     (nzOnConfirm)="deleteStudent(student.id)">Delete</a>
             </td>
         </tr>
-    }
-</tbody>
+        }
+    </tbody>
 </nz-table>
 } @else {
-    <h4 nz-typography>Students list is empty!</h4>
-}
-}
+<h4 nz-typography>Students list is empty!</h4>
+}}
 
-<app-add-student-modal [isVisible]="isShowAddStudentModal" (visibleChanged)="isShowAddStudentModal = $event" />
-<app-edit-student-modal [isVisible]="isShowUpdateStudentModal" (visibleChanged)="isShowUpdateStudentModal = $event" />
+<app-student-modal [isVisible]="isShowStudentModal" [action]="actionModal()" (visibleChanged)="isShowStudentModal = $event" />

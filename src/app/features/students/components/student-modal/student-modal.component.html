@@ -1,7 +1,8 @@
-<nz-modal [(nzVisible)]="isVisible" nzTitle="Add a new student" (nzOnCancel)="handleCancel()" (nzOnOk)="handleAdd()"
-    [nzOkLoading]="isAddLoading" [nzOkDisabled]="isAddLoading" [nzContent]="modalContent">
+<nz-modal [nzTitle]="action==='add'? 'Add a student' : 'Edit a student'" [nzOkLoading]="isLoading"
+    [nzOkDisabled]="isLoading" [nzContent]="modalContent" [(nzVisible)]="isVisible" (nzOnCancel)="handleClose()"
+    (nzOnOk)="handleSubmit()">
     <ng-template #modalContent>
-        <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="handleAdd()">
+        <form nz-form [formGroup]="validateForm" class="login-form" (ngSubmit)="handleSubmit()">
             <nz-form-item>
                 <nz-form-control nzErrorTip="Please input firstName">
                     <nz-form-label nzRequired nzFor="firstName"> FirstName</nz-form-label>

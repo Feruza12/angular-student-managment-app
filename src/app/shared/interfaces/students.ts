@@ -14,3 +14,13 @@ export interface StudentFormValue {
     group: FormControl<number>;
 }
 
+export type StudentModalType = "add" | "edit";
+
+
+export interface StudentState {
+    students: Student[];
+    error: string | null;
+    loading: boolean;
+    selectedStudent: Student | null;
+}
+

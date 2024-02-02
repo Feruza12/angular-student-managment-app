@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, Signal, computed, effect, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, Signal, computed, effect, inject } from '@angular/core';
 import { FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -6,29 +6,35 @@ import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 
-import { StudentFormValue } from '../../../../shared/interfaces/students';
+import { Student, StudentFormValue, StudentModalType } from '../../../../shared/interfaces/students';
 import { StudentService } from '../../../../shared/services/student.service';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
+import { Subject, finalize, takeUntil, tap } from 'rxjs';
+
 
 @Component({
-  selector: 'app-add-student-modal',
+  selector: 'app-student-modal',
   standalone: true,
   imports: [NzModalModule, NzFormModule, NzInputModule, ReactiveFormsModule, FormsModule, CommonModule, NzMessageModule],
-  templateUrl: './add-student-modal.component.html',
-  styleUrl: './add-student-modal.component.sass'
+  templateUrl: './student-modal.component.html',
+  styleUrl: './student-modal.component.sass'
 })
-export class AddStudentModalComponent {
+export class StudentModalComponent implements OnInit, OnDestroy {
   @Input() public isVisible: boolean = false;
+  @Input() public action: StudentModalType = "add";
   @Output() public visibleChanged = new EventEmitter<boolean>();
 
   private fb: NonNullableFormBuilder = inject(NonNullableFormBuilder)
   private studentService: StudentService = inject(StudentService);
   private toast: NzMessageService = inject(NzMessageService)
+  private student: Signal<Student | null> = computed(() => this.studentService.selectedStudent());
+
+  private onDestroy$: Subject<void> = new Subject();
 
   private error: Signal<string | null> = computed(() => this.studentService.error())
 
 
-  public isAddLoading: boolean = false;
+  public isLoading: boolean = false;
 
   public validateForm: FormGroup<StudentFormValue> = this.fb.group({
     firstName: ['', [Validators.minLength(1), Validators.required]],
@@ -39,6 +45,9 @@ export class AddStudentModalComponent {
 
   constructor() {
     effect(() => {
+      if (this.student()) {
+        this.validateForm.patchValue({ ...this.student() })
+      }
       if (this.error()) {
         this.toast.error(this.error() || '', {
           nzDuration: 5000
@@ -47,18 +56,36 @@ export class AddStudentModalComponent {
     })
   }
 
-  public handleAdd(): void {
-    this.isAddLoading = true;
+  public ngOnInit() {
+    this.studentService.addStudent().pipe(
+      takeUntil(this.onDestroy$),
+      tap({
+        next: () => this.handleSuccess()
+      }),
+    ).subscribe();
+
+    this.studentService.updateStudent().pipe(
+      takeUntil(this.onDestroy$),
+      tap({
+        next: () => this.handleSuccess()
+      }),
+    ).subscribe();
+  }
+
+  public handleSubmit(): void {
+    this.isLoading = true;
 
     if (this.validateForm.valid) {
-      const student = { ...this.validateForm.getRawValue() }
+      if (this.action === 'add') {
+        const student = { ...this.validateForm.getRawValue() }
+        this.studentService.addStudentSubject$.next(student);
 
-      this.studentService.addStudent$.next(student);
+      } else {
+        const student = { ...this.validateForm.getRawValue(), id: this.student()?.id }
+        this.studentService.updateStudentSubject$.next(student);
+      }
 
-      this.isVisible = false;
-      this.visibleChanged.emit(this.isVisible)
-      this.isAddLoading = false;
-      this.validateForm.reset();
+
     } else {
       Object.values(this.validateForm.controls).forEach(control => {
         if (control.invalid) {
@@ -69,9 +96,19 @@ export class AddStudentModalComponent {
     }
   }
 
-  public handleCancel(): void {
+  public handleClose(): void {
     this.validateForm.reset();
     this.isVisible = false;
     this.visibleChanged.emit(this.isVisible)
+  }
+
+  public handleSuccess(): void {
+    this.handleClose();
+    this.isLoading = false;
+  }
+
+  public ngOnDestroy(): void {
+    this.onDestroy$.next();
+    this.onDestroy$.complete();
   }
 }

@@ -1,4 +1,4 @@
-import { Component, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -10,29 +10,31 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 
 import { StudentService } from '../../shared/services/student.service';
-import { Student } from '../../shared/interfaces/students';
+import { Student, StudentModalType } from '../../shared/interfaces/students';
 import { HeaderComponent } from '../../shared/components/header/header.component';
-import { AddStudentModalComponent } from './components/add-student-modal/add-student-modal.component';
-import { EditStudentModalComponent } from './components/edit-student-modal/edit-student-modal.component';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
+import { StudentModalComponent } from './components/student-modal/student-modal.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, NzTypographyModule, NzTableModule, NzDividerModule, NzButtonModule, NzInputModule, FormsModule, CommonModule, NzMessageModule, NzPopconfirmModule, AddStudentModalComponent, EditStudentModalComponent],
+  imports: [CommonModule, HeaderComponent, NzTypographyModule, NzTableModule, NzDividerModule, NzButtonModule, NzInputModule, FormsModule, CommonModule, NzMessageModule, NzPopconfirmModule, StudentModalComponent],
   templateUrl: './students.component.html',
   styleUrl: './students.component.sass'
 })
-export class StudentsComponent {
+export class StudentsComponent implements OnInit, OnDestroy {
   private studentsService: StudentService = inject(StudentService)
   private toast: NzMessageService = inject(NzMessageService)
+  
+  public isShowStudentModal: boolean = false;
 
   public students: Signal<Student[]> = computed(() => this.studentsService.students())
   public loading: Signal<boolean> = computed(() => this.studentsService.loading())
   private error: Signal<string | null> = computed(() => this.studentsService.error())
+  public actionModal: WritableSignal<StudentModalType> = signal("add");
 
-  public isShowAddStudentModal: boolean = false;
-  public isShowUpdateStudentModal: boolean = false;
+  private onDestroy$: Subject<void> = new Subject();
 
   constructor() {
     effect(() => {
@@ -44,17 +46,26 @@ export class StudentsComponent {
     })
   }
 
-  public showAddStudentModal(): void {
-    this.isShowAddStudentModal = true;
+  public ngOnInit(): void {
+    this.studentsService.getStudents().pipe(takeUntil(this.onDestroy$)).subscribe();
+    this.studentsService.deleteStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
+    this.studentsService.selectStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
   }
-
-  public showUpdateStudentModal(student: Student): void {
-    this.studentsService.selectStudent$.next(student);
-    this.isShowUpdateStudentModal = true;
+  
+  public showStudentModal({ action, student }: { action: StudentModalType, student: null | Student }): void {
+    this.isShowStudentModal = true;
+    this.actionModal.set(action);
+    if (student) {
+      this.studentsService.selectedStudentSubject$.next(student);
+    }
   }
 
   public deleteStudent(id: string): void {
-    this.studentsService.deleteStudent$.next(id);
+    this.studentsService.deleteStudentSubject$.next(id);
   }
 
+  public ngOnDestroy(): void {
+    this.onDestroy$.next();
+    this.onDestroy$.complete();
+  }
 }
