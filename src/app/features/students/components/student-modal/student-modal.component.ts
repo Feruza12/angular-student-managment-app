@@ -2,44 +2,47 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, Signal, comp
 import { FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+import { Subject, takeUntil, tap } from 'rxjs';
+
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzModalModule } from 'ng-zorro-antd/modal';
-
-import { Student, StudentFormValue, StudentModalType } from '../../../../shared/interfaces/students';
-import { StudentService } from '../../../../shared/services/student.service';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
-import { Subject, finalize, takeUntil, tap } from 'rxjs';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 
+import { Student, StudentFormValue, ModalType, GroupSelect } from '../../../../shared/interfaces/students';
+import { StudentService } from '../../../../shared/services/student.service';
+import { GroupService } from '../../../../shared/services/group.service';
 
 @Component({
   selector: 'app-student-modal',
   standalone: true,
-  imports: [NzModalModule, NzFormModule, NzInputModule, ReactiveFormsModule, FormsModule, CommonModule, NzMessageModule],
+  imports: [NzModalModule, NzFormModule, NzInputModule, ReactiveFormsModule, FormsModule, CommonModule, NzMessageModule, NzSelectModule],
   templateUrl: './student-modal.component.html',
   styleUrl: './student-modal.component.sass'
 })
 export class StudentModalComponent implements OnInit, OnDestroy {
   @Input() public isVisible: boolean = false;
-  @Input() public action: StudentModalType = "add";
+  @Input() public action: ModalType = "add";
   @Output() public visibleChanged = new EventEmitter<boolean>();
 
   private fb: NonNullableFormBuilder = inject(NonNullableFormBuilder)
   private studentService: StudentService = inject(StudentService);
+  private groupService = inject(GroupService)
   private toast: NzMessageService = inject(NzMessageService)
+
   private student: Signal<Student | null> = computed(() => this.studentService.selectedStudent());
+  private error: Signal<string | null> = computed(() => this.studentService.error());
+  public groups: Signal<GroupSelect[]> = computed(() => this.groupService.groups().map(group => ({ name: group.title, value: group.title })));
 
   private onDestroy$: Subject<void> = new Subject();
-
-  private error: Signal<string | null> = computed(() => this.studentService.error())
-
 
   public isLoading: boolean = false;
 
   public validateForm: FormGroup<StudentFormValue> = this.fb.group({
     firstName: ['', [Validators.minLength(1), Validators.required]],
     lastName: ['', [Validators.minLength(1), Validators.required]],
-    group: [0, [Validators.min(0), Validators.required]]
+    group: ['', [Validators.minLength(1), Validators.required]]
   });
 
 
@@ -56,7 +59,7 @@ export class StudentModalComponent implements OnInit, OnDestroy {
     })
   }
 
-  public ngOnInit() {
+  public ngOnInit(): void {
     this.studentService.addStudent().pipe(
       takeUntil(this.onDestroy$),
       tap({
@@ -69,6 +72,10 @@ export class StudentModalComponent implements OnInit, OnDestroy {
       tap({
         next: () => this.handleSuccess()
       }),
+    ).subscribe();
+
+    this.groupService.getGroups().pipe(
+      takeUntil(this.onDestroy$)
     ).subscribe();
   }
 
@@ -103,6 +110,9 @@ export class StudentModalComponent implements OnInit, OnDestroy {
   }
 
   public handleSuccess(): void {
+    this.toast.success(`Successfully has been ${this.action}ed`, {
+      nzDuration: 5000
+    });
     this.handleClose();
     this.isLoading = false;
   }

@@ -2,6 +2,8 @@ import { Component, OnDestroy, OnInit, Signal, WritableSignal, computed, effect,
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+import { Subject, takeUntil } from 'rxjs';
+
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
@@ -10,29 +12,28 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 
 import { StudentService } from '../../shared/services/student.service';
-import { Student, StudentModalType } from '../../shared/interfaces/students';
+import { ActionStudentModal, ModalType, Student } from '../../shared/interfaces/students';
 import { HeaderComponent } from '../../shared/components/header/header.component';
 import { NzMessageModule, NzMessageService } from 'ng-zorro-antd/message';
 import { StudentModalComponent } from './components/student-modal/student-modal.component';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-students',
   standalone: true,
-  imports: [CommonModule, HeaderComponent, NzTypographyModule, NzTableModule, NzDividerModule, NzButtonModule, NzInputModule, FormsModule, CommonModule, NzMessageModule, NzPopconfirmModule, StudentModalComponent],
+  imports: [CommonModule, HeaderComponent, NzTypographyModule, NzTableModule, NzDividerModule, NzButtonModule, NzInputModule, FormsModule, NzMessageModule, NzPopconfirmModule, StudentModalComponent],
   templateUrl: './students.component.html',
   styleUrl: './students.component.sass'
 })
 export class StudentsComponent implements OnInit, OnDestroy {
   private studentsService: StudentService = inject(StudentService)
   private toast: NzMessageService = inject(NzMessageService)
-  
+
   public isShowStudentModal: boolean = false;
 
   public students: Signal<Student[]> = computed(() => this.studentsService.students())
   public loading: Signal<boolean> = computed(() => this.studentsService.loading())
   private error: Signal<string | null> = computed(() => this.studentsService.error())
-  public actionModal: WritableSignal<StudentModalType> = signal("add");
+  public actionModal: WritableSignal<ModalType> = signal("add");
 
   private onDestroy$: Subject<void> = new Subject();
 
@@ -51,8 +52,8 @@ export class StudentsComponent implements OnInit, OnDestroy {
     this.studentsService.deleteStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
     this.studentsService.selectStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
   }
-  
-  public showStudentModal({ action, student }: { action: StudentModalType, student: null | Student }): void {
+
+  public showStudentModal({ action, student }: ActionStudentModal): void {
     this.isShowStudentModal = true;
     this.actionModal.set(action);
     if (student) {

@@ -1,8 +1,7 @@
 import { Injectable, Signal, WritableSignal, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { Observable, Subject, defer, merge } from 'rxjs';
-import { tap, exhaustMap, switchMap, map } from 'rxjs/operators';
+import { Observable, Subject, defer } from 'rxjs';
+import { tap, exhaustMap } from 'rxjs/operators';
 
 import { Firestore, collection, orderBy, query, addDoc, updateDoc, serverTimestamp, deleteDoc, doc, DocumentReference, DocumentData } from 'firebase/firestore';
 import { collectionData } from 'rxfire/firestore';
@@ -28,19 +27,26 @@ export class StudentService {
     students: [],
     error: null,
     loading: false,
-    selectedStudent: null
+    selectedStudent: null,
+    studentCount: {}
   });
 
   public students: Signal<Student[]> = computed(() => this.state().students);
   public loading: Signal<boolean> = computed(() => this.state().loading);
   public error: Signal<string | null> = computed(() => this.state().error);
   public selectedStudent: Signal<Student | null> = computed(() => this.state().selectedStudent);
+  public studentCount: Signal<Record<string, number>> = computed(() => this.state().studentCount);
 
   constructor() {
 
   }
 
   public getStudents(): Observable<Student[]> {
+    this.state.update((state) => ({
+      ...state,
+      loading: true
+    }))
+
     return this.studentsSubject$.pipe(
       tap({
         next: (students: Student[]) => {
@@ -58,12 +64,27 @@ export class StudentService {
       }))
   }
 
-  public addStudent(): Observable<DocumentReference<DocumentData, DocumentData>> {
-    this.state.update((state) => ({
-      ...state,
-      loading: true
-    }))
+  public getStudentCount() {
+    return this.studentsSubject$.pipe(
+      tap({
+        next: (students: Student[]) => {
+          const studentCount = students.reduce((accumulator, student) => {
+            if (accumulator.hasOwnProperty(student.group)) {
+              return { ...accumulator, [student.group]: accumulator[student.group as keyof typeof accumulator] + 1 };
+            } else {
+              return { ...accumulator, [student.group]: 1 };
+            }
+          }, {})
 
+          return this.state.update((state) => ({
+            ...state,
+            studentCount,
+          }))
+        }
+      }))
+  }
+
+  public addStudent(): Observable<DocumentReference<DocumentData, DocumentData>> {
     return this.addStudentSubject$.pipe(
       exhaustMap((student) => this.addStudentRequest(student)),
       tap({
@@ -76,7 +97,7 @@ export class StudentService {
   }
 
   public updateStudent(): Observable<void> {
-    return this.updateStudentSubject$.pipe(
+     return this.updateStudentSubject$.pipe(
       exhaustMap((student) => this.updateStudentRequest(student)),
       tap({
         error: (err: Error) => this.state.update((state) => ({
@@ -115,7 +136,6 @@ export class StudentService {
   }
 
   private addStudentRequest(student: Partial<Student>): Observable<DocumentReference<DocumentData, DocumentData>> {
-    console.log("student", student)
     const newStudent = {
       ...student,
       createdAt: serverTimestamp()
