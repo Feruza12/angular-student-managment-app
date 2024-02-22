@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, Signal, WritableSignal, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -29,9 +29,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
   
   public isShowStudentModal: boolean = false;
 
-  public students: Signal<Student[]> = computed(() => this.studentsService.students())
-  public loading: Signal<boolean> = computed(() => this.studentsService.loading())
-  private error: Signal<string | null> = computed(() => this.studentsService.error())
+  public students: Signal<Student[]> = this.studentsService.students
+  public loading: Signal<boolean> = this.studentsService.loading
+  private error: Signal<string | null> = this.studentsService.error
   public actionModal: WritableSignal<StudentModalType> = signal("add");
 
   private onDestroy$: Subject<void> = new Subject();
@@ -48,19 +48,18 @@ export class StudentsComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.studentsService.getStudents().pipe(takeUntil(this.onDestroy$)).subscribe();
-    this.studentsService.deleteStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
-    this.studentsService.selectStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
   }
   
   public showStudentModal({ action, student }: { action: StudentModalType, student: null | Student }): void {
     this.isShowStudentModal = true;
     this.actionModal.set(action);
     if (student) {
-      this.studentsService.selectedStudentSubject$.next(student);
+      this.studentsService.selectStudent(student);
     }
   }
-
+  
   public deleteStudent(id: string): void {
+    this.studentsService.deleteStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
     this.studentsService.deleteStudentSubject$.next(id);
   }
 

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, Signal, computed, effect, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, Signal, effect, inject } from '@angular/core';
 import { FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -27,11 +27,11 @@ export class StudentModalComponent implements OnInit, OnDestroy {
   private fb: NonNullableFormBuilder = inject(NonNullableFormBuilder)
   private studentService: StudentService = inject(StudentService);
   private toast: NzMessageService = inject(NzMessageService)
-  private student: Signal<Student | null> = computed(() => this.studentService.selectedStudent());
+  private student: Signal<Student | null> =  this.studentService.selectedStudent;
 
   private onDestroy$: Subject<void> = new Subject();
 
-  private error: Signal<string | null> = computed(() => this.studentService.error())
+  private error: Signal<string | null> = this.studentService.error;
 
 
   public isLoading: boolean = false;
