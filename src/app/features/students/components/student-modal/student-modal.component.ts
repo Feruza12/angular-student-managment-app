@@ -31,11 +31,14 @@ export class StudentModalComponent implements OnInit, OnDestroy {
   private groupService = inject(GroupService)
   private toast: NzMessageService = inject(NzMessageService)
 
-  private student: Signal<Student | null> = computed(() => this.studentService.selectedStudent());
-  private error: Signal<string | null> = computed(() => this.studentService.error());
   public groups: Signal<GroupSelect[]> = computed(() => this.groupService.groups().map(group => ({ name: group.title, value: group.title })));
 
+  private student: Signal<Student | null> =  this.studentService.selectedStudent;
+
   private onDestroy$: Subject<void> = new Subject();
+
+  private error: Signal<string | null> = this.studentService.error;
+
 
   public isLoading: boolean = false;
 

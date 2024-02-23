@@ -18,10 +18,12 @@ export class StudentService {
   private fireStore: Firestore = inject(FIRESTORE);
 
   private studentsSubject$: Observable<Student[]> = this.fetchStudents();
+
+  public studentActionSubject$ = new Subject<Partial<Student[]>>();
+
   public addStudentSubject$ = new Subject<Partial<Student>>();
   public deleteStudentSubject$ = new Subject<string>();
   public updateStudentSubject$ = new Subject<Partial<Student>>();
-  public selectedStudentSubject$ = new Subject<Student>();
 
   private state: WritableSignal<StudentState> = signal<StudentState>({
     students: [],
@@ -120,10 +122,8 @@ export class StudentService {
     );
   }
 
-  public selectStudent(): Observable<Student> {
-    return this.selectedStudentSubject$.pipe(
-      tap((student: Student) => this.state.update((state) => ({ ...state, selectedStudent: student })))
-    )
+  public selectStudent(student: Student) {
+    return this.state.update((state) => ({ ...state, selectedStudent: student }))    
   }
 
   private fetchStudents(): Observable<Student[]> {

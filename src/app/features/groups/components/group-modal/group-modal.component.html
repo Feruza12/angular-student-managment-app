@@ -1,5 +1,10 @@
-<nz-modal [nzTitle]="action==='add'? 'Add new group' : 'Edit selected group'" [nzOkLoading]="isLoading"
-    [nzOkDisabled]="isLoading" [nzContent]="modalContent" [(nzVisible)]="isVisible" (nzOnCancel)="handleClose()"
+<nz-modal 
+    [nzTitle]="action==='add'? 'Add new group' : 'Edit selected group'" 
+    [nzOkLoading]="isLoading"
+    [nzOkDisabled]="isLoading" 
+    [nzContent]="modalContent" 
+    [(nzVisible)]="isVisible" 
+    (nzOnCancel)="handleClose()"
     (nzOnOk)="handleSubmit()">
     <ng-template #modalContent>
         <form nz-form [formGroup]="validateForm" (ngSubmit)="handleSubmit()">
