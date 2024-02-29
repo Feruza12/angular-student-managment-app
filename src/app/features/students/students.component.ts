@@ -1,8 +1,6 @@
-import { Component, OnDestroy, OnInit, Signal, WritableSignal, effect, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-import { Subject, takeUntil } from 'rxjs';
 
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -24,18 +22,27 @@ import { StudentModalComponent } from './components/student-modal/student-modal.
   templateUrl: './students.component.html',
   styleUrl: './students.component.sass'
 })
-export class StudentsComponent implements OnInit, OnDestroy {
+export class StudentsComponent {
   private studentsService: StudentService = inject(StudentService)
   private toast: NzMessageService = inject(NzMessageService)
 
+  public students: Signal<Student[]> = computed(() => {
+    try {
+      return this.studentsService.students()
+    } catch (e) {
+      this.toast.error(typeof e === 'string' ? e : 'Error', {
+        nzDuration: 5000
+      })
+      return [];
+    }
+  })
+  public loading: Signal<boolean> = this.studentsService.loading;
+  private deleted: Signal<boolean> = computed(() => this.studentsService.status() === 'deleted');
+  private error: Signal<string | null> = this.studentsService.error;
+
+  public actionModal: WritableSignal<ModalType> = signal("add");
   public isShowStudentModal: boolean = false;
 
-  public students: Signal<Student[]> = this.studentsService.students
-  public loading: Signal<boolean> = this.studentsService.loading
-  private error: Signal<string | null> = this.studentsService.error
-  public actionModal: WritableSignal<ModalType> = signal("add");
-
-  private onDestroy$: Subject<void> = new Subject();
 
   constructor() {
     effect(() => {
@@ -44,11 +51,13 @@ export class StudentsComponent implements OnInit, OnDestroy {
           nzDuration: 5000
         })
       }
-    })
-  }
 
-  public ngOnInit(): void {
-    this.studentsService.getStudents().pipe(takeUntil(this.onDestroy$)).subscribe();
+      if (this.deleted()) {
+        this.toast.success('Has been deleted!' || '', {
+          nzDuration: 5000
+        })
+      }
+    })
   }
 
   public showStudentModal({ action, student }: ActionStudentModal): void {
@@ -58,14 +67,9 @@ export class StudentsComponent implements OnInit, OnDestroy {
       this.studentsService.selectStudent(student);
     }
   }
-  
+
   public deleteStudent(id: string): void {
-    this.studentsService.deleteStudent().pipe(takeUntil(this.onDestroy$)).subscribe();
-    this.studentsService.deleteStudentSubject$.next(id);
+    this.studentsService.deleteStudent(id)
   }
 
-  public ngOnDestroy(): void {
-    this.onDestroy$.next();
-    this.onDestroy$.complete();
-  }
 }

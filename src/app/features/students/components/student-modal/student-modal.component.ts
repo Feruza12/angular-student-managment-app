@@ -1,8 +1,6 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, Signal, computed, effect, inject } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, Signal, WritableSignal, computed, effect, inject, signal } from '@angular/core';
 import { FormGroup, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-
-import { Subject, takeUntil, tap } from 'rxjs';
 
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -21,7 +19,7 @@ import { GroupService } from '../../../../shared/services/group.service';
   templateUrl: './student-modal.component.html',
   styleUrl: './student-modal.component.sass'
 })
-export class StudentModalComponent implements OnInit, OnDestroy {
+export class StudentModalComponent {
   @Input() public isVisible: boolean = false;
   @Input() public action: ModalType = "add";
   @Output() public visibleChanged = new EventEmitter<boolean>();
@@ -32,13 +30,10 @@ export class StudentModalComponent implements OnInit, OnDestroy {
   private toast: NzMessageService = inject(NzMessageService)
 
   public groups: Signal<GroupSelect[]> = computed(() => this.groupService.groups().map(group => ({ name: group.title, value: group.title })));
-
-  private student: Signal<Student | null> =  this.studentService.selectedStudent;
-
-  private onDestroy$: Subject<void> = new Subject();
-
+  private student: Signal<Student | null> = this.studentService.selectedStudent;
   private error: Signal<string | null> = this.studentService.error;
-
+  private updatedStudent: Signal<boolean> = computed(() => this.studentService.status() === 'updated');
+  private addedStudent: Signal<boolean> = computed(() => this.studentService.status() === 'added');
 
   public isLoading: boolean = false;
 
@@ -59,42 +54,23 @@ export class StudentModalComponent implements OnInit, OnDestroy {
           nzDuration: 5000
         })
       }
+      if(this.updatedStudent() || this.addedStudent()){
+        this.handleSuccess();
+      }
     })
   }
 
-  public ngOnInit(): void {
-    this.studentService.addStudent().pipe(
-      takeUntil(this.onDestroy$),
-      tap({
-        next: () => this.handleSuccess()
-      }),
-    ).subscribe();
-
-    this.studentService.updateStudent().pipe(
-      takeUntil(this.onDestroy$),
-      tap({
-        next: () => this.handleSuccess()
-      }),
-    ).subscribe();
-
-    this.groupService.getGroups().pipe(
-      takeUntil(this.onDestroy$)
-    ).subscribe();
-  }
 
   public handleSubmit(): void {
-    this.isLoading = true;
-
     if (this.validateForm.valid) {
+      this.isLoading = true;
       if (this.action === 'add') {
         const student = { ...this.validateForm.getRawValue() }
-        this.studentService.addStudentSubject$.next(student);
-
+        this.studentService.addStudent(student);
       } else {
         const student = { ...this.validateForm.getRawValue(), id: this.student()?.id }
-        this.studentService.updateStudentSubject$.next(student);
-      }
-
+        this.studentService.updateStudent(student);
+      }    
 
     } else {
       Object.values(this.validateForm.controls).forEach(control => {
@@ -120,8 +96,5 @@ export class StudentModalComponent implements OnInit, OnDestroy {
     this.isLoading = false;
   }
 
-  public ngOnDestroy(): void {
-    this.onDestroy$.next();
-    this.onDestroy$.complete();
-  }
+
 }

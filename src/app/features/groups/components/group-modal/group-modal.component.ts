@@ -20,7 +20,7 @@ import { GroupService } from '../../../../shared/services/group.service';
   templateUrl: './group-modal.component.html',
   styleUrl: './group-modal.component.sass'
 })
-export class GroupModalComponent implements OnInit, OnDestroy {
+export class GroupModalComponent implements OnDestroy {
   @Input() public isVisible: boolean = false;
   @Input() public action: ModalType = "add";
   @Output() public visibleChanged = new EventEmitter<boolean>();
@@ -28,8 +28,8 @@ export class GroupModalComponent implements OnInit, OnDestroy {
   private formBuilder: NonNullableFormBuilder = inject(NonNullableFormBuilder);
   private toast: NzMessageService = inject(NzMessageService);
   private groupService: GroupService = inject(GroupService);
-  private selectedGroup: Signal<Group | null> = computed(() => this.groupService.selectedGroup());
-  private error: Signal<string | null> = computed(() => this.groupService.error());
+  private selectedGroup: Signal<Group | null> = this.groupService.selectedGroup;
+  private error: Signal<string | null> = this.groupService.error;
 
   private onDestroy$: Subject<void> = new Subject();
 
@@ -53,31 +53,31 @@ export class GroupModalComponent implements OnInit, OnDestroy {
     })
   }
 
-  public ngOnInit(): void {
-    this.groupService.addGroup().pipe(
-      takeUntil(this.onDestroy$),
-      tap({
-        next: () => this.handleSuccess()
-      }),
-    ).subscribe();
-
-    this.groupService.updateGroup().pipe(
-      takeUntil(this.onDestroy$),
-      tap({
-        next: () => this.handleSuccess()
-      }),
-    ).subscribe();
-  }
-
   public handleSubmit(): void {
     this.isLoading = true;
     if (this.validateForm.valid) {
       if (this.action === 'add') {
         const group = { ...this.validateForm.getRawValue() }
+
+        this.groupService.addGroup().pipe(
+          takeUntil(this.onDestroy$),
+          tap({
+            next: () => this.handleSuccess()
+          }),
+        ).subscribe();
+
         this.groupService.addGroupSubject$.next(group);
 
       } else {
         const group = { ...this.validateForm.getRawValue(), id: this.selectedGroup()?.id }
+
+        this.groupService.updateGroup().pipe(
+          takeUntil(this.onDestroy$),
+          tap({
+            next: () => this.handleSuccess()
+          }),
+        ).subscribe();
+
         this.groupService.updateGroupSubject$.next(group);
       }
     } else {

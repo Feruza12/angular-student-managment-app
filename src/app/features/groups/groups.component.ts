@@ -25,16 +25,25 @@ import { GroupModalComponent } from './components/group-modal/group-modal.compon
   templateUrl: './groups.component.html',
   styleUrl: './groups.component.sass'
 })
-export class GroupsComponent implements OnInit, OnDestroy {
+export class GroupsComponent implements OnDestroy {
   private groupsService: GroupService = inject(GroupService);
   private studentService: StudentService = inject(StudentService);
   private toast: NzMessageService = inject(NzMessageService);
 
-  public groups: Signal<Group[]> = computed(() => this.groupsService.groups());
-  public studentCount: Signal<Record<string, number>> = computed(() => this.studentService.studentCount());
-  public loading: Signal<boolean> = computed(() => this.groupsService.loading());
-  private error: Signal<string | null> = computed(() => this.groupsService.error());
-  
+  public groups: Signal<Group[]> = computed(() => {
+    try {
+      return this.groupsService.groups();
+    } catch (e) {
+      this.toast.error(typeof e === 'string' ? e : 'Error', {
+        nzDuration: 5000
+      })
+      return []
+    }
+  });
+  public studentCount: Signal<Record<string, number>> = this.studentService.studentCount;
+  public loading: Signal<boolean> = this.groupsService.loading;
+  private error: Signal<string | null> = this.groupsService.error;
+
   public actionModal: WritableSignal<ModalType> = signal("add");
   public isShowGroupModal: boolean = false;
 
@@ -50,18 +59,11 @@ export class GroupsComponent implements OnInit, OnDestroy {
     })
   }
 
-  public ngOnInit(): void {
-    this.groupsService.getGroups().pipe(takeUntil(this.onDestroy$)).subscribe();
-    this.studentService.getStudentCount().pipe(takeUntil(this.onDestroy$)).subscribe();
-    this.groupsService.deleteGroup().pipe(takeUntil(this.onDestroy$)).subscribe();
-    this.groupsService.selectGroup().pipe(takeUntil(this.onDestroy$)).subscribe();
-  }
-
   public showGroupModal({ action, group }: ActionGroupModalParams): void {
     this.isShowGroupModal = true;
     this.actionModal.set(action);
     if (group) {
-      this.groupsService.selectedGroupSubject$.next(group);
+      this.groupsService.selectGroup(group)
     }
   }
 
@@ -72,6 +74,7 @@ export class GroupsComponent implements OnInit, OnDestroy {
       })
     }
 
+    this.groupsService.deleteGroup().pipe(takeUntil(this.onDestroy$)).subscribe();
     return this.groupsService.deleteGroupSubject$.next(id);
   }
 

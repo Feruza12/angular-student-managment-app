@@ -8,7 +8,6 @@ export interface Group {
 }
 
 export interface GroupState {
-    groups: Group[];
     loading: boolean;
     error: string | null;
     selectedGroup: Group | null;
