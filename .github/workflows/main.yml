@@ -1,0 +1,17 @@
+name: 'BrowserStack Test'
+on: [push, pull_request]
+
+jobs:
+  ubuntu-job:
+    name: 'BrowserStack Test on Ubuntu'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'BrowserStack Env Setup'
+        uses: browserstack/github-actions@v1.0.1
+        with:
+          username:  ${{ secrets.BROWSERSTACK_USERNAME }}
+          access-key: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+          build-name: BUILD_INFO
+          project-name: UrgentIQ
+      - name: 'BrowserStackLocal Setup'
+        uses: 'browsers'
