@@ -2,7 +2,8 @@
 @if (loading()) {
 <p>Loading ...</p>
 } @else {
-<button nz-button (click)="showStudentModal({action: 'add', student: null})" nzType="primary" class="add-btn">Add
+<button nz-button #showModal (click)="showStudentModal({action: 'add', student: null})" nzType="primary"
+    class="add-btn">Add
     Student</button>
 @if (students().length !=0) {
 <nz-table #basicTable nzBordered [nzData]="students()" [nzFrontPagination]="false">
@@ -34,4 +35,5 @@
 <h4 nz-typography>Students list is empty!</h4>
 }}
 
-<app-student-modal [isVisible]="isShowStudentModal" [action]="actionModal()" (visibleChanged)="isShowStudentModal = $event" />
+<app-student-modal [isVisible]="isShowStudentModal" [action]="actionModal()"
+    (visibleChanged)="isShowStudentModal = $event" />
