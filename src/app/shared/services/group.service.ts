@@ -3,19 +3,17 @@ import { Injectable, Signal, WritableSignal, computed, inject, signal } from '@a
 import { FIRESTORE } from '../../app.config';
 import { DocumentData, DocumentReference, Firestore, addDoc, collection, deleteDoc, doc, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { collectionData } from 'rxfire/firestore';
-import { Observable, Subject, catchError, defer, exhaustMap, shareReplay, tap, throwError } from 'rxjs';
+import { Observable, catchError, defer, shareReplay, tap } from 'rxjs';
 import { Group, GroupState } from '../interfaces/groups';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { ErrorService } from './error.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GroupService {
   private fireStore: Firestore = inject(FIRESTORE);
-
-  public addGroupSubject$ = new Subject<Partial<Group>>();
-  public updateGroupSubject$ = new Subject<Partial<Group>>();
-  public deleteGroupSubject$ = new Subject<string>();
+  private errorService: ErrorService = inject(ErrorService)
 
   private state: WritableSignal<GroupState> = signal<GroupState>({
     error: null,
@@ -24,57 +22,60 @@ export class GroupService {
   });
 
   private groups$ = this.fetchGroupsRequest().pipe(
+    tap(() => this.state.update((state) => ({ ...state, loading: false }))),
     shareReplay(1),
-    catchError(this.handleError));
+    catchError((err) => {
+      this.state.update((state) => ({
+        ...state,
+        error: err
+      }));
+      return this.errorService.handleError(err)
+    })
+  );
 
-  public groups: Signal<Group[]> = toSignal(this.groups$, {initialValue: []});
+  public groups: Signal<Group[]> = toSignal(this.groups$, { initialValue: [] });
   public selectedGroup: Signal<Group | null> = computed(() => this.state().selectedGroup);
   public loading: Signal<boolean> = computed(() => this.state().loading);
   public error: Signal<string | null> = computed(() => this.state().error);
 
-  constructor() { }
+  constructor() {}
 
-  public addGroup(): Observable<DocumentReference<DocumentData, DocumentData>> {
-    return this.addGroupSubject$.pipe(
-      exhaustMap((group) => this.addGroupRequest(group)),
-      tap({
-        error: (err: Error) => this.state.update((state) => ({
+
+  public addGroup(group: Partial<Group>): Observable<DocumentReference<DocumentData, DocumentData>> {
+    return this.addGroupRequest(group).pipe(
+      catchError((err) => {
+        this.state.update((state) => ({
           ...state,
-          error: err.message
-        }))
-      })
-    )
+          error: err
+        }));
+        return this.errorService.handleError(err)
+      }),)
+
   }
 
   public selectGroup(group: Group) {
     return this.state.update((state) => ({ ...state, selectedGroup: group }))
   }
 
-  public updateGroup(): Observable<void> {
-    return this.updateGroupSubject$.pipe(
-      exhaustMap((group) => this.updateGroupRequest(group)),
-      tap({
-        error: (err: Error) => this.state.update((state) => ({
+  public updateGroup(group: Partial<Group>): Observable<void> {
+    return this.updateGroupRequest(group).pipe(
+      catchError((err) => {
+        this.state.update((state) => ({
           ...state,
-          error: err.message
-        }))
-      })
+          error: err
+        }));
+        return this.errorService.handleError(err)
+      }),
     )
   }
 
-  public deleteGroup() {
-    return this.deleteGroupSubject$.pipe(
-      exhaustMap((id) => this.deleteGroupRequest(id)),
-      tap({
-        error: (err: Error) => this.state.update((state) => ({
-          ...state,
-          error: err.message
-        }))
-      })
-    );
+  public deleteGroup(id: string) {
+    return this.deleteGroupRequest(id)
   }
 
   private fetchGroupsRequest() {
+    this.state.update((state) => ({ ...state, loading: true }))
+
     const studentsCollection = query(
       collection(this.fireStore, 'groups'),
       orderBy('createdAt', 'desc')
@@ -106,20 +107,4 @@ export class GroupService {
     return defer(() => deleteDoc(decRef))
   }
 
-  private handleError(err: any): Observable<never> {
-    let errorMessage = '';
-
-    if (err.error instanceof ErrorEvent) {
-      errorMessage = `An error occurred: ${err.error.message}`;
-    } else {
-      errorMessage = `Server returned code: ${err.status}, error message is: ${err.message
-        }`;
-    }
-    this.state.update((state) => ({
-      ...state,
-      error: errorMessage
-    }));
-    console.error(errorMessage);
-    return throwError(() => errorMessage);
-  }
 }
