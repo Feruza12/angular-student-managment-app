@@ -1,0 +1,34 @@
+<nz-modal [nzTitle]="action==='add'? 'Add new student' : 'Edit selected student'" [nzOkLoading]="isLoading"
+    [nzOkDisabled]="isLoading" [nzContent]="modalContent" [(nzVisible)]="isVisible" (nzOnCancel)="handleClose()"
+    (nzOnOk)="handleSubmit()">
+    <ng-template #modalContent>
+        <form nz-form [formGroup]="validateForm" (ngSubmit)="handleSubmit()">
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input firstName">
+                    <nz-form-label nzRequired nzFor="firstName"> FirstName</nz-form-label>
+                    <nz-input-group>
+                        <input nz-input formControlName="firstName" placeholder="FirstName" />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input lastName">
+                    <nz-form-label nzRequired nzFor="lastName"> LastName</nz-form-label>
+                    <nz-input-group>
+                        <input nz-input formControlName="lastName" placeholder="LastName" />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input group">
+                    <nz-form-label nzRequired nzFor="group">Group</nz-form-label>
+                    <nz-select formControlName="group">
+                        @for (group of groups(); track $index) {
+                        <nz-option [nzValue]="group.value" [nzLabel]="group.name"></nz-option>
+                        }
+                    </nz-select>
+                </nz-form-control>
+            </nz-form-item>
+        </form>
+    </ng-template>
+</nz-modal>

@@ -1,0 +1,35 @@
+<app-header title="Group List"></app-header>
+@if (loading()) {
+<p>Loading ...</p>
+} @else {
+<button nz-button nzType="primary" class="add-btn" (click)="showGroupModal({action: 'add', group: null})">Add
+    Group</button>
+@if (groups().length !=0) {
+<nz-table #basicTable nzBordered [nzData]="groups()" [nzFrontPagination]="false">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Number of students</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (group of groups(); track group.createdAt) {
+        <tr>
+            <td>{{group.title}}</td>
+            <td>{{studentCount().hasOwnProperty(group.title) ? studentCount()[group.title] : 0}}</td>
+            <td>
+                <a (click)="showGroupModal({action: 'edit', group})">Edit</a>
+                <nz-divider nzType="vertical"></nz-divider>
+                <a nz-popconfirm nzPopconfirmTitle="Sure to delete?"
+                    (nzOnConfirm)="deleteGroup({id:group.id, title: group.title})">Delete</a>
+            </td>
+        </tr>
+        }
+    </tbody>
+</nz-table>
+} @else {
+<h4 nz-typography>Groups list is empty!</h4>
+}}
+
+<app-group-modal [isVisible]="isShowGroupModal" [action]="actionModal()" (visibleChanged)="isShowGroupModal = $event" />

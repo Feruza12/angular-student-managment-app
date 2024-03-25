@@ -1,4 +1,4 @@
-import { Injectable, InjectionToken, Signal, computed, inject, signal } from '@angular/core';
+import { Injectable, Signal, computed, inject, signal } from '@angular/core';
 import { AUTH } from '../../app.config';
 
 import { authState } from 'rxfire/auth';

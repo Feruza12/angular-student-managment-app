@@ -1,0 +1,21 @@
+<nz-modal 
+    [nzTitle]="action==='add'? 'Add new group' : 'Edit selected group'" 
+    [nzOkLoading]="isLoading"
+    [nzOkDisabled]="isLoading" 
+    [nzContent]="modalContent" 
+    [(nzVisible)]="isVisible" 
+    (nzOnCancel)="handleClose()"
+    (nzOnOk)="handleSubmit()">
+    <ng-template #modalContent>
+        <form nz-form [formGroup]="validateForm" (ngSubmit)="handleSubmit()">
+            <nz-form-item>
+                <nz-form-control nzErrorTip="Please input title">
+                    <nz-form-label nzRequired nzFor="title"> Title</nz-form-label>
+                    <nz-input-group>
+                        <input nz-input formControlName="title" placeholder="Title" />
+                    </nz-input-group>
+                </nz-form-control>
+            </nz-form-item>
+        </form>
+    </ng-template>
+</nz-modal>
